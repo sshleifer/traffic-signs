@@ -12,6 +12,7 @@ def get_n_params():
     for variable in trainaible_vars:
         # shape is an array of tf.Dimension
         shape = variable.get_shape()
+
         variable_parameters = 1
         for dim in shape:
             variable_parameters *= dim.value
@@ -19,32 +20,24 @@ def get_n_params():
     return {'n_params': total_parameters, 'n_vars': len(trainaible_vars)}
 
 
-def conv2d_relu(x, w_shape, strides=1, padding='VALID'):
-    W = tf.Variable(tf.truncated_normal(shape=w_shape, mean=mu, stddev=sigma))
-    b = tf.Variable(tf.zeros(w_shape[-1]))
-    x = tf.nn.conv2d(x, W, strides=[1, strides, strides, 1],
-                     padding=padding)
-    x = tf.nn.bias_add(x, b)
-    return tf.nn.relu(x)
+def evaluate(X_data, y_data, num_examples=None):
+    if num_examples is None:
+        num_examples = len(X_data)
+    total_accuracy = 0
+    sess = tf.get_default_session()
+    for offset in range(0, num_examples, BATCH_SIZE):
+        batch_x, batch_y = X_data[offset:offset+BATCH_SIZE], y_data[offset:offset+BATCH_SIZE]
+        accuracy = sess.run(accuracy_operation,
+                            feed_dict={x: batch_x, y: batch_y,
+                                       keep_prob: 1.})
+        total_accuracy += (accuracy * len(batch_x))
+    return total_accuracy / num_examples
 
 
-def fc_layer(x, num_outputs):
-    fc1 = tf.contrib.layers.fully_connected(x, num_outputs)
-    fc1 = tf.nn.dropout(fc1, keep_prob)
-    return tf.nn.relu(fc1)
-
-
-def LeNet(x, n_channels=3, n_classes=43):
-
-    conv1 = conv2d_relu(x, (5, 5, n_channels, 6))
-    conv1 = tf.nn.max_pool(conv1, ksize=[1, 2, 2, 1], strides=[1, 2, 2, 1], padding='VALID')
-
-    conv2 = conv2d_relu(conv1, (5, 5, 6, 16))
-    conv2 = tf.nn.max_pool(conv2, ksize=[1, 2, 2, 1], strides=[1, 2, 2, 1], padding='VALID')
-
-    # SOLUTION: Flatten. Input = 5x5x16. Output = 400.
-    fc0 = flatten(conv2)
-    fc1 = fc_layer(fc0, 120)
-    fc2 = fc_layer(fc1, 84)
-    logits = tf.contrib.layers.fully_connected(fc2, n_classes)
-    return logits
+def log_accuracy(verbose=False):
+    validation_accuracy = evaluate(X_valid, y_valid)
+    train_accuracy = evaluate(X_train, y_train)
+    if verbose:
+        print("Train={:.3f}, Validation={:.3f}".format(
+            train_accuracy, validation_accuracy))
+    return train_accuracy, validation_accuracy
