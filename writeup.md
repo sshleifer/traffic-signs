@@ -33,9 +33,12 @@ Fully connected layer with 84 outputs and .5 dropout
 Fully connected layer with 43 outputs {logits}
 
 
+### Differences between new images and old images
+Old images and new images are both 32x32x3, but old images have a higher average pixel value in all three channels than new images, with an average value of 87 vs 73. Since the normalization is hard coded to be x/127.5 -1, this means that in normalized space, the average pixel value is -.46 on new images vs. -.35 on train images, which could make generalizing difficult.
+
 
 ### Poor Performance on New images
-the model only gets images with numbers in them correct (speed limit), as these seem easy (at least for me) and are very frequent in the training data. I think if the signs from the web occupied more of the image performance might have been better. The outputted probabilities show that the model is very certain of its speed limit sign predictions, and less certain about other predicitons, which is reassuring. I think if I had trained on augmented data it could have helped my model's generalization ability. My performance on new images was 2/7.
+the model only gets images with numbers in them correct (speed limit), as these seem easy (at least for me) and are very frequent in the training data. I think if the signs from the web occupied more of the image performance might have been better. The outputted probabilities show that the model is very certain of its speed limit sign predictions, and less certain about other predicitons, which is reassuring. I think if I had trained on augmented data it could have helped my model's generalization ability. My performance on new images was 2/7. Accuracy on the test images was 93.8%, suggesting that we have overfit to the given data.
 
 # Other things I didnt try
 - taking out dropout and just doing batch norm
